@@ -1,6 +1,8 @@
 using System.Data;
 using NHibernate.Cfg;
 using NHibernate.Dialect;
+using NHibernate.Driver;
+using NHibernate.Engine;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 
@@ -66,7 +68,7 @@ namespace NHibernate.Test.NHSpecificTest.NH1553.MsSQL
 			SavePerson(p1);
 			Assert.That(p1.Version, Is.EqualTo(person.Version + 1));
 
-			var expectedException = sessions.Settings.IsBatchVersionedDataEnabled
+			var expectedException = Sfi.Settings.IsBatchVersionedDataEnabled
 				? (IResolveConstraint) Throws.InstanceOf<StaleStateException>()
 				: Throws.InstanceOf<StaleObjectStateException>()
 				        .And.Property("EntityName").EqualTo(typeof(Person).FullName)
@@ -103,7 +105,7 @@ namespace NHibernate.Test.NHSpecificTest.NH1553.MsSQL
 
 					session2.SaveOrUpdate(p2);
 
-					var expectedException = sessions.Settings.IsBatchVersionedDataEnabled
+					var expectedException = Sfi.Settings.IsBatchVersionedDataEnabled
 						? (IConstraint) Throws.InstanceOf<StaleStateException>()
 						: Throws.InstanceOf<StaleObjectStateException>()
 						        .And.Property("EntityName").EqualTo(typeof(Person).FullName)
@@ -123,6 +125,13 @@ namespace NHibernate.Test.NHSpecificTest.NH1553.MsSQL
 		protected override bool AppliesTo(Dialect.Dialect dialect)
 		{
 			return dialect is MsSql2005Dialect;
+		}
+
+		protected override bool AppliesTo(ISessionFactoryImplementor factory)
+		{
+			// SQLUpdateConflictToStaleStateExceptionConverter is specific to Sql client driver, and does not work
+			// with Odbc (and likeley Oledb).
+			return factory.ConnectionProvider.Driver is SqlClientDriver;
 		}
 
 		private void SetAllowSnapshotIsolation(bool on)

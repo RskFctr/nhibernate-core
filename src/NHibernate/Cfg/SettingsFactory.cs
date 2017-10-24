@@ -281,12 +281,6 @@ namespace NHibernate.Cfg
 			bool namedQueryChecking = PropertiesHelper.GetBoolean(Environment.QueryStartupChecking, properties, true);
 			log.Info("Named query checking : " + EnabledDisabled(namedQueryChecking));
 			settings.IsNamedQueryStartupCheckingEnabled = namedQueryChecking;
-
-#pragma warning disable 618 // Disable warning for use of obsolete symbols.
-			var interceptorsBeforeTransactionCompletionIgnoreExceptions = PropertiesHelper.GetBoolean(Environment.InterceptorsBeforeTransactionCompletionIgnoreExceptions, properties, false);
-			log.Info("Ignoring exceptions in BeforeTransactionCompletion : " + EnabledDisabled(interceptorsBeforeTransactionCompletionIgnoreExceptions));
-			settings.IsInterceptorsBeforeTransactionCompletionIgnoreExceptionsEnabled = interceptorsBeforeTransactionCompletionIgnoreExceptions;
-#pragma warning restore 618
 			
 			// Not ported - settings.StatementFetchSize = statementFetchSize;
 			// Not ported - ScrollableResultSetsEnabled
@@ -399,14 +393,16 @@ namespace NHibernate.Cfg
 		private static ITransactionFactory CreateTransactionFactory(IDictionary<string, string> properties)
 		{
 			string className = PropertiesHelper.GetString(
-				Environment.TransactionStrategy, properties, typeof(AdoNetWithDistributedTransactionFactory).FullName);
+				Environment.TransactionStrategy, properties, typeof(AdoNetWithSystemTransactionFactory).FullName);
 			log.Info("Transaction factory: " + className);
 
 			try
 			{
-				return
+				var transactionFactory =
 					(ITransactionFactory)
 					Environment.BytecodeProvider.ObjectsFactory.CreateInstance(ReflectHelper.ClassForName(className));
+				transactionFactory.Configure(properties);
+				return transactionFactory;
 			}
 			catch (Exception cnfe)
 			{

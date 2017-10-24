@@ -88,5 +88,12 @@ namespace NHibernate.Driver
 		{
 			get { return true; }
 		}
+
+		public override bool RequiresTimeSpanForTime => true;
+
+		// As of v5.7, lower dates may "work" but without guarantees.
+		// https://dev.mysql.com/doc/refman/5.7/en/datetime.html
+		/// <inheritdoc />
+		public override DateTime MinDate => new DateTime(1000, 1, 1);
 	}
 }

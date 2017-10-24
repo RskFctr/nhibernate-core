@@ -34,7 +34,7 @@ namespace NHibernate.Id
 	/// The mapping parameters <c>table</c> and <c>column</c> are required.
 	/// </p>
 	/// </remarks>
-	public class TableGenerator : TransactionHelper, IPersistentIdentifierGenerator, IConfigurable
+	public partial class TableGenerator : TransactionHelper, IPersistentIdentifierGenerator, IConfigurable
 	{
 		private static readonly IInternalLogger log = LoggerProvider.LoggerFor(typeof (TableGenerator));
 
@@ -244,7 +244,7 @@ namespace NHibernate.Id
 						log.Error(err);
 						throw new IdentifierGenerationException(err);
 					}
-					result = Convert.ToInt64(columnType.Get(rs, 0));
+					result = Convert.ToInt64(columnType.Get(rs, 0, session));
 				}
 				catch (Exception e)
 				{
@@ -266,8 +266,8 @@ namespace NHibernate.Id
 
 				try
 				{
-					columnType.Set(ups, result + 1, 0);
-					columnType.Set(ups, result, 1);
+					columnType.Set(ups, result + 1, 0, session);
+					columnType.Set(ups, result, 1, session);
 
 					PersistentIdGeneratorParmsNames.SqlStatementLogger.LogCommand("Updating high value:", ups, FormatStyle.Basic);
 

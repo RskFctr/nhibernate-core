@@ -17,7 +17,7 @@ namespace NHibernate.Event.Default
 	/// in response to generated load events.
 	/// </summary>
 	[Serializable]
-	public class DefaultLoadEventListener : AbstractLockUpgradeEventListener, ILoadEventListener
+	public partial class DefaultLoadEventListener : AbstractLockUpgradeEventListener, ILoadEventListener
 	{
 		private static readonly IInternalLogger log = LoggerProvider.LoggerFor(typeof(DefaultLoadEventListener));
 		public static readonly object RemovedEntityMarker = new object();
@@ -413,7 +413,7 @@ namespace NHibernate.Event.Default
 		protected virtual object LoadFromSecondLevelCache(LoadEvent @event, IEntityPersister persister, LoadType options)
 		{
 			ISessionImplementor source = @event.Session;
-			bool useCache = persister.HasCache && ((source.CacheMode & CacheMode.Get) == CacheMode.Get)
+			bool useCache = persister.HasCache && source.CacheMode .HasFlag(CacheMode.Get)
 				&& @event.LockMode.LessThan(LockMode.Read);
 
 			if (useCache)

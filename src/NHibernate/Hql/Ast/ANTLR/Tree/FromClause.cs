@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+
 using Antlr.Runtime;
 
 using NHibernate.Hql.Ast.ANTLR.Util;
@@ -363,11 +365,10 @@ namespace NHibernate.Hql.Ast.ANTLR.Tree
 		public virtual void Resolve()
 		{
 			// Make sure that all from elements registered with this FROM clause are actually in the AST.
-			var iter = (new ASTIterator(GetFirstChild())).GetEnumerator();
 			var childrenInTree = new HashSet<IASTNode>();
-			while (iter.MoveNext())
+			foreach (var ast in new ASTIterator(GetFirstChild()))
 			{
-				childrenInTree.Add(iter.Current);
+				childrenInTree.Add(ast);
 			}
 			foreach (var fromElement in _fromElements)
 			{
@@ -376,6 +377,11 @@ namespace NHibernate.Hql.Ast.ANTLR.Tree
 					throw new SemanticException("Element not in AST: " + fromElement);
 				}
 			}
+		}
+
+		public FromElement GetFromElementByClassName(string className)
+		{
+			return _fromElementByClassAlias.Values.FirstOrDefault(variable => variable.ClassName == className);
 		}
 	}
 }

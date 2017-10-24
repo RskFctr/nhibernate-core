@@ -38,7 +38,7 @@ namespace NHibernate.Persister.Entity
 	/// <remarks>
 	/// May be considered an immutable view of the mapping object
 	/// </remarks>
-	public abstract class AbstractEntityPersister : IOuterJoinLoadable, IQueryable, IClassMetadata, IUniqueKeyLoadable, ISqlLoadable, ILazyPropertyInitializer, IPostInsertIdentityPersister, ILockable
+	public abstract partial class AbstractEntityPersister : IOuterJoinLoadable, IQueryable, IClassMetadata, IUniqueKeyLoadable, ISqlLoadable, ILazyPropertyInitializer, IPostInsertIdentityPersister, ILockable
 	{
 		#region InclusionChecker
 
@@ -82,7 +82,7 @@ namespace NHibernate.Persister.Entity
 
 		#endregion
 
-		private class GeneratedIdentifierBinder : IBinder
+		private partial class GeneratedIdentifierBinder : IBinder
 		{
 			private readonly object[] fields;
 			private readonly bool[] notNull;
@@ -1245,7 +1245,7 @@ namespace NHibernate.Persister.Entity
 												MessageHelper.InfoString(this, id, Factory), fieldName));
 			}
 
-			if (HasCache)
+			if (HasCache && session.CacheMode.HasFlag(CacheMode.Get))
 			{
 				CacheKey cacheKey = session.GenerateCacheKey(id, IdentifierType, EntityName);
 				object ce = Cache.Get(cacheKey, session.Timestamp);
@@ -3818,7 +3818,7 @@ namespace NHibernate.Persister.Entity
             }
 
 			// check to see if it is in the second-level cache
-			if (HasCache)
+			if (HasCache && session.CacheMode.HasFlag(CacheMode.Get))
 			{
 				CacheKey ck = session.GenerateCacheKey(id, IdentifierType, RootEntityName);
 				if (Cache.Get(ck, session.Timestamp) != null)
@@ -4160,7 +4160,7 @@ namespace NHibernate.Persister.Entity
 			query.SetOptionalId(id);
 			query.SetOptionalEntityName(this.EntityName);
 			query.SetOptionalObject(entity);
-			query.SetFlushMode(FlushMode.Never);
+			query.SetFlushMode(FlushMode.Manual);
 			query.List();
 		}
 

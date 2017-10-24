@@ -215,11 +215,11 @@ namespace NHibernate.Util
 		public static readonly IEnumerable EmptyEnumerable = new EmptyEnumerableClass();
 		public static readonly IDictionary EmptyMap = new EmptyMapClass();
 		public static readonly ICollection EmptyCollection = EmptyMap;
-		// To be removed in v6.0
+		// Since v5
 		[Obsolete("It has no more usages in NHibernate and will be removed in a future version.")]
 		public static readonly IList EmptyList = new EmptyListClass();
 
-		// To be removed in v6.0
+		// Obsolete since v5
 		/// <summary>
 		/// Determines if two collections have equals elements, with the same ordering.
 		/// </summary>
@@ -244,22 +244,28 @@ namespace NHibernate.Util
 				return false;
 			}
 
-			IEnumerator e1 = c1.GetEnumerator();
-			IEnumerator e2 = c2.GetEnumerator();
-
-			while (e1.MoveNext())
+			var e2 = c2.GetEnumerator();
+			try
 			{
-				e2.MoveNext();
-				if (!Equals(e1.Current, e2.Current))
+				foreach (var item1 in c1)
 				{
-					return false;
+					e2.MoveNext();
+					if (!Equals(item1, e2.Current))
+					{
+						return false;
+					}
 				}
+			}
+			finally
+			{
+				// Most IEnumerator will have a disposable concrete implementation, must check it.
+				(e2 as IDisposable)?.Dispose();
 			}
 
 			return true;
 		}
 
-		// To be removed in v6.0
+		// Since v5
 		[Obsolete("It has no more usages in NHibernate and will be removed in a future version.")]
 		public static bool DictionaryEquals(IDictionary a, IDictionary b)
 		{
@@ -289,7 +295,7 @@ namespace NHibernate.Util
 			return true;
 		}
 
-		// To be removed in v6.0
+		// Obsolete since v5
 		/// <summary>
 		/// Computes a hash code for <paramref name="coll"/>.
 		/// </summary>
@@ -590,7 +596,7 @@ namespace NHibernate.Util
 		public static bool SetEquals<T>(ISet<T> s1, ISet<T> s2)
 			=> FastCheckEquality(s1, s2) ?? s1.SetEquals(s2);
 
-		// To be removed in v6.0
+		// Obsolete since v5
 		/// <summary>
 		/// Determines if two collections have equals elements, with the same ordering.
 		/// </summary>

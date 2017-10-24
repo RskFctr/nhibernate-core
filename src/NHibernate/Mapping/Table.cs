@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using NHibernate.Dialect.Schema;
 using NHibernate.Engine;
@@ -564,12 +565,7 @@ namespace NHibernate.Mapping
 		/// </returns>
 		public Column GetColumn(int n)
 		{
-			IEnumerator<Column> iter = columns.Values.GetEnumerator();
-			for (int i = 0; i <= n; i++)
-			{
-				iter.MoveNext();
-			}
-			return iter.Current;
+			return columns.Values.Skip(n).First();
 		}
 
 		/// <summary>
@@ -976,8 +972,10 @@ namespace NHibernate.Mapping
 			return buf.ToString();
 		}
 
-		public void ValidateColumns(Dialect.Dialect dialect, IMapping mapping, ITableMetadata tableInfo)
+		public IEnumerable<string> ValidateColumns(Dialect.Dialect dialect, IMapping mapping, ITableMetadata tableInfo)
 		{
+			var validationErrors = new List<string>();
+
 			IEnumerable<Column> iter = ColumnIterator;
 			foreach (Column column in iter)
 			{
@@ -985,8 +983,12 @@ namespace NHibernate.Mapping
 
 				if (columnInfo == null)
 				{
-					throw new HibernateException(string.Format("Missing column: {0} in {1}", column.Name,
-															   dialect.Qualify(tableInfo.Catalog, tableInfo.Schema, tableInfo.Name)));
+					validationErrors.Add(
+						string.Format(
+							"Missing column: {0} in {1}",
+							column.Name,
+							dialect.Qualify(tableInfo.Catalog, tableInfo.Schema, tableInfo.Name)));
+					continue;
 				}
 
 				//TODO: Add new method to ColumnMetadata :getTypeCode
@@ -994,12 +996,17 @@ namespace NHibernate.Mapping
 				//|| columnInfo.get() == column.GetSqlTypeCode(mapping);
 				if (!typesMatch)
 				{
-					throw new HibernateException(string.Format("Wrong column type in {0} for column {1}. Found: {2}, Expected {3}",
-															   dialect.Qualify(tableInfo.Catalog, tableInfo.Schema, tableInfo.Name),
-															   column.Name, columnInfo.TypeName.ToLowerInvariant(),
-															   column.GetSqlType(dialect, mapping)));
+					validationErrors.Add(
+						string.Format(
+							"Wrong column type in {0} for column {1}. Found: {2}, Expected {3}",
+							dialect.Qualify(tableInfo.Catalog, tableInfo.Schema, tableInfo.Name),
+							column.Name,
+							columnInfo.TypeName.ToLowerInvariant(),
+							column.GetSqlType(dialect, mapping)));
 				}
 			}
+
+			return validationErrors;
 		}
 
 

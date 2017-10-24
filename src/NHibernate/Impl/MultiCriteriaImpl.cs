@@ -15,7 +15,7 @@ using NHibernate.Util;
 
 namespace NHibernate.Impl
 {
-	public class MultiCriteriaImpl : IMultiCriteria
+	public partial class MultiCriteriaImpl : IMultiCriteria
 	{
 		private static readonly IInternalLogger log = LoggerProvider.LoggerFor(typeof(MultiCriteriaImpl));
 		private readonly IList<ICriteria> criteriaQueries = new List<ICriteria>();
@@ -137,7 +137,7 @@ namespace NHibernate.Impl
 				log.Debug("Cache miss for multi criteria query");
 				IList list = DoList();
 				result = list;
-				if ((session.CacheMode & CacheMode.Put) == CacheMode.Put)
+				if (session.CacheMode.HasFlag(CacheMode.Put))
 				{
 					bool put = queryCache.Put(key, new ICacheAssembler[] { assembler }, new object[] { list }, combinedParameters.NaturalKeyLookup, session);
 					if (put && factory.Statistics.IsStatisticsEnabled)
